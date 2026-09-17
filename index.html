@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hospital Help Assistant</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  #chat-container {
+    width: 400px;
+    height: 600px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #chat-header {
+    background: #2563eb;
+    color: white;
+    padding: 16px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  #safety-banner {
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 13px;
+    padding: 8px 12px;
+    text-align: center;
+  }
+  #chat-messages {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .message {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    line-height: 1.4;
+    font-size: 14px;
+  }
+  .bot {
+    background: #e5e7eb;
+    align-self: flex-start;
+  }
+  .user {
+    background: #2563eb;
+    color: white;
+    align-self: flex-end;
+  }
+  #chat-input-area {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #e5e7eb;
+  }
+  #chat-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  #chat-send {
+    margin-left: 8px;
+    padding: 10px 16px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #chat-send:hover {
+    background: #1d4ed8;
+  }
+</style>
+</head>
+<body>
+
+<div id="chat-container">
+  <div id="chat-header">Hospital Help Assistant</div>
+  <div id="safety-banner">If you feel unwell right now, please tell a staff member immediately — don't wait for the chatbot.</div>
+  <div id="chat-messages"></div>
+  <div id="chat-input-area">
+    <input type="text" id="chat-input" placeholder="Type your question..." />
+    <button id="chat-send">Send</button>
+  </div>
+</div>
+
+<script>
+  const messagesEl = document.getElementById('chat-messages');
+  const inputEl = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('chat-send');
+
+  // Change this if your backend runs somewhere other than localhost:3000
+  const BACKEND_URL = 'http://localhost:3000/ask';
+
+  function addMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = 'message ' + sender;
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const question = inputEl.value.trim();
+    if (!question) return;
+
+    addMessage(question, 'user');
+    inputEl.value = '';
+
+    try {
+      const response = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+      });
+      const data = await response.json();
+      addMessage(data.answer, 'bot');
+    } catch (err) {
+      addMessage("Sorry, I'm having trouble connecting right now. Please ask a staff member.", 'bot');
+    }
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  inputEl.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  // Greet the patient on load
+  addMessage("Hi! I'm here to answer common questions while you wait. What would you like to know?", 'bot');
+</script>
+
+</body>
+</html>
